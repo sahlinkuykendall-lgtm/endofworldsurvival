@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standing Supply Manifest</title>
+<style>
+  :root{
+    --paper:#E7E0D0;
+    --paper-2:#DCD3BF;
+    --ink:#17202B;
+    --ink-soft:#5A6472;
+    --rule:#BBAF98;
+    --ochre:#A8661B;
+    --rust:#8C3019;
+    --field:#3C5A40;
+    --cond:"Arial Narrow","Liberation Sans Narrow",system-ui,sans-serif;
+    --sans:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  .sheet{max-width:760px;margin:0 auto;padding:20px 18px 64px}
+
+  /* ---- masthead ---- */
+  header{border-bottom:4px solid var(--ink);padding-bottom:16px}
+  .filed{
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  h1{
+    font-family:var(--cond);font-stretch:condensed;
+    font-size:clamp(34px,9vw,58px);font-weight:700;line-height:.94;
+    letter-spacing:-.015em;margin:.18em 0 .1em;
+  }
+  .dek{font-family:var(--serif);font-size:15.5px;line-height:1.55;color:var(--ink-soft);margin:0 0 18px;max-width:54ch}
+
+  /* ---- gauge ---- */
+  .gauge{margin:0 0 18px}
+  .gauge-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .gauge-num{font-family:var(--cond);font-stretch:condensed;font-size:26px;font-weight:700;letter-spacing:-.01em}
+  .gauge-num b{color:var(--ochre);font-weight:700}
+  .gauge-hint{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .ticks{display:flex;gap:2px;height:16px}
+  .tick{flex:1;background:var(--paper-2);border:1px solid var(--rule);border-radius:1px;transition:background .18s ease}
+  .tick.on{background:var(--ochre);border-color:var(--ochre)}
+
+  /* ---- controls ---- */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  input[type=search]{
+    flex:1 1 180px;min-width:150px;font:inherit;font-size:15px;padding:8px 10px;
+    background:#F2EDE1;border:1px solid var(--rule);border-radius:2px;color:var(--ink);
+  }
+  input[type=search]:focus,button:focus-visible{outline:2px solid var(--ochre);outline-offset:1px}
+  button{
+    font:inherit;font-size:13px;padding:8px 11px;cursor:pointer;
+    background:#F2EDE1;color:var(--ink);border:1px solid var(--rule);border-radius:2px;
+  }
+  button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  button.warn{color:var(--rust);border-color:#C9A99C}
+
+  /* ---- sections ---- */
+  section{margin-top:34px}
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    border-top:3px solid var(--ink);padding-top:7px;
+  }
+  h2{
+    font-family:var(--cond);font-stretch:condensed;font-weight:700;
+    font-size:clamp(22px,5.2vw,29px);letter-spacing:-.01em;margin:0;line-height:1.05;
+  }
+  .sec-tally{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
+  .note{
+    font-family:var(--serif);font-size:14.5px;line-height:1.6;
+    background:var(--paper-2);border-left:4px solid var(--ochre);
+    padding:11px 13px;margin:12px 0 4px;
+  }
+  .note.hot{border-left-color:var(--rust)}
+  .note b{font-weight:700}
+
+  /* ---- rows ---- */
+  ul{list-style:none;margin:6px 0 0;padding:0}
+  li{
+    display:grid;grid-template-columns:26px 1fr auto;gap:2px 10px;
+    align-items:start;padding:9px 0;border-bottom:1px solid var(--rule);
+  }
+  li.done .name{color:var(--ink-soft);text-decoration:line-through;text-decoration-thickness:1px}
+  input[type=checkbox]{
+    grid-row:1/3;width:19px;height:19px;margin:2px 0 0;accent-color:var(--ochre);cursor:pointer;
+  }
+  .name{font-size:15.5px;line-height:1.35}
+  .sub{grid-column:2;font-family:var(--serif);font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+  .qty{
+    grid-row:1/3;font-family:var(--mono);font-size:12px;color:var(--ink-soft);
+    text-align:right;white-space:nowrap;padding-top:3px;
+  }
+  .pill{
+    display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;
+    padding:1px 5px;border:1px solid;border-radius:2px;vertical-align:2px;margin-right:6px;
+  }
+  .t1{color:var(--rust);border-color:var(--rust)}
+  .t2{color:var(--ochre);border-color:var(--ochre)}
+  .t3{color:var(--field);border-color:var(--field)}
+
+  footer{
+    margin-top:40px;border-top:3px solid var(--ink);padding-top:12px;
+    font-family:var(--serif);font-size:14px;color:var(--ink-soft);line-height:1.6;
+  }
+  .legend{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin:14px 0 0;line-height:1.9}
+
+  @media (max-width:420px){
+    li{grid-template-columns:24px 1fr}
+    .qty{grid-row:auto;grid-column:2;text-align:left;padding-top:2px}
+  }
+  @media print{
+    body{background:#fff;color:#000;font-size:10.5pt}
+    .controls,.gauge .ticks,button{display:none}
+    .sheet{max-width:none;padding:0}
+    li{break-inside:avoid;page-break-inside:avoid}
+    section{break-inside:auto}
+    .note{background:none;border-left:3px solid #000}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header>
+  <div class="filed">
+    <span id="stamp">Sheet opened —</span>
+    <span>Household · Oldham County, KY</span>
+  </div>
+  <h1>Standing supply manifest</h1>
+  <p class="dek">A working inventory for long-duration grid loss, supply interruption, or fallout shelter-in-place. Check items as they land on the shelf, not when they land in a cart. Print it, keep a paper copy with the cache.</p>
+
+  <div class="gauge">
+    <div class="gauge-row">
+      <div class="gauge-num"><b id="cnt">0</b> of <span id="tot">0</span> stocked</div>
+      <div class="gauge-hint" id="pct">0%</div>
+    </div>
+    <div class="ticks" id="ticks"></div>
+  </div>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search items" aria-label="Search items">
+    <button id="f-all" aria-pressed="true">All</button>
+    <button id="f-1" aria-pressed="false">72 hours</button>
+    <button id="f-2" aria-pressed="false">90 days</button>
+    <button id="f-3" aria-pressed="false">Long haul</button>
+    <button id="f-open" aria-pressed="false">Still needed</button>
+    <button id="print">Print</button>
+    <button id="reset" class="warn">Clear all</button>
+  </div>
+</header>
+
+<main id="body"></main>
+
+<footer>
+  <p>Everything here is useless without the reps. A grain mill you have never turned, a tourniquet you have never applied one-handed, a radio you have never found a repeater on — those are props. Pick one line a week and actually use it.</p>
+  <p class="legend">
+    <span class="pill t1">72H</span> get first · <span class="pill t2">90D</span> build next · <span class="pill t3">LONG</span> the slow list
+  </p>
+</footer>
+
+</div>
+
+<script>
+const D = [
+["Water", null, [
+["1","Gravity filter, 0.2 micron","1 + 2 spare elements","Berkey-style or a Sawyer bucket kit. Elements are the consumable — buy spares now, not later."],
+["1","Personal squeeze filter","1 per person","Goes in every bag and vehicle."],
+["1","Stored water, food-grade","110 gal + 6× 5-gal jugs","One gallon per person per day is survival, not living. Three is comfortable."],
+["1","Bathtub bladder","1 per tub","Fill it the moment you hear a warning. 60–100 gal you would otherwise lose."],
+["2","Calcium hypochlorite, 68%+","1 lb","Pool shock with no algaecide or clarifier. One pound makes many thousands of gallons of bleach solution and stores for years — liquid bleach does not."],
+["2","Water test strips and a TDS meter","1 each",""],
+["2","Rain catchment: barrels, first-flush diverter, gutter screen","2–4 barrels","Cheapest volume you will ever add. Roof water is not drinking water until it is filtered."],
+["2","Food-grade hose and a siphon pump","1 each",""],
+["3","Hand pump for the well","1","Simple Pump or Bison, sized to your static water level. This is the single best water purchase if you are on a well."],
+["3","Spare well pump, pressure tank bladder, foot valve","1 set",""]
+]],
+
+["Food stores", null, [
+["1","Two weeks of food you already eat","—","Start here. Rotate it. Nobody is happy eating wheat berries on day three of an ice storm."],
+["2","Rice, beans, oats, wheat berries — mylar, O2 absorbers, buckets","300–400 lb per person","Packed properly this is a 25-year store. Buckets with gamma lids make it usable."],
+["2","Salt","25 lb+","Iodized for the table, plain non-iodized for curing and fermenting."],
+["2","Cooking fat: coconut oil, lard, ghee","20 lb+","Fat is the first thing missing from a staples-only diet and the hardest to improvise."],
+["2","Honey and sugar","20 lb+","Honey does not spoil. Sugar is a preservative as much as a sweetener."],
+["2","Canned and freeze-dried protein","—","Canned meat, fish, freeze-dried eggs and butter powder."],
+["2","Multivitamin and vitamin C","2-year supply","A rice-and-beans diet is short on A, C, D and B12. Scurvy is a preparedness failure, not a pirate story."],
+["2","Manual grain mill","1","Whole grain stores. Flour does not. Get a mill with steel burrs and spare burrs."],
+["2","Pressure canner, jars, and lids","1 canner + 200 lids","Lids are the shortage item. Buy them by the case."],
+["2","Mylar bags, O2 absorbers, gamma lids, impulse sealer","—","Repack bulk buys yourself at a fraction of the prepackaged price."],
+["2","Vacuum sealer and rolls","1",""],
+["2","Coffee, tea, cocoa, bouillon, hot sauce, vinegar","—","Morale rations. Underrated and cheap."],
+["2","Baking soda, baking powder, yeast, dry milk","—","Vacuum-seal yeast and freeze it."],
+["2","Pet and livestock feed","3 months",""],
+["3","Cure #1, smoker, and a meat saw","1 set","Curing and smoking are how you keep protein without a freezer."],
+["3","Root cellar or an insulated crawl bin","1","Free refrigeration eight months a year in Kentucky."]
+]],
+
+["Growing and soil", "Fruit is the exception to seed storage: apple, peach and pear seeds do not breed true, so a seed packet gets you a random wild tree in eight years. Buy grafted dwarf trees and berry canes and get them in the ground <b>now</b>, wherever you land. Two years of root growth cannot be bought later at any price.", [
+["2","Open-pollinated and heirloom vegetable seed","3-year supply","Open-pollinated only. F1 hybrids will not breed true, so you cannot save seed from them — which defeats the whole point."],
+["2","Core vegetables: beans, corn, squash, tomato, potato, sweet potato, cabbage, carrot, beet, onion, turnip, collards, kale","—","Calories and storage first, salad second. Potatoes and sweet potatoes carry more calories per square foot than anything else you can grow here."],
+["2","Culinary herbs: basil, oregano, thyme, sage, dill, parsley, cilantro, mint, rosemary","—","These all grow in Kentucky. Perennials come back every year for free."],
+["2","True spices — stockpile, do not plan to grow","10 lb assorted","Black pepper, cinnamon, nutmeg, clove, cumin, vanilla and turmeric are tropical. Store them whole in sealed jars; whole spice holds flavor for years, ground does not."],
+["2","Coconut coir bricks, buffered and low-salt","10+ bricks","Sterile, inert, stores dry for a decade, expands about 6x. Rinse and soak once before use — unbuffered coir holds sodium and potassium that lock out calcium and magnesium."],
+["2","Perlite and vermiculite","4 cu ft each","Coir alone holds too much water. Cut it roughly 70/30 with perlite for containers."],
+["2","Dry amendments: azomite, bone meal, blood meal, kelp, gypsum, dolomite lime","—","Coir has no nutrition in it at all. It is a sponge, not soil. Without amendments you get healthy-looking nothing."],
+["2","Mycorrhizal inoculant and a bag of worm castings","—",""],
+["2","Fabric grow bags and food-safe containers","20+","Container growing is how you farm contaminated or unknown ground."],
+["2","Soil test kit with pH","2",""],
+["2","Row cover, greenhouse plastic, shade cloth, landscape staples","—","Two extra growing months on each end of the season."],
+["2","Seed-saving kit: envelopes, silica desiccant, labels, airtight jars","—","Cool, dark, dry. Seed in a sealed jar in a basement corner beats seed in a shed by years of viability."],
+["3","Hand tools: broadfork, hoe, dibber, watering cans","—","No-engine versions of everything you currently plug in."],
+["3","Oyster mushroom spawn","—","Grows on the same coir you are already stocking, plus straw or cardboard. Protein from waste."],
+["3","Laying hens and rabbits, plus feed and a plan","—","Eggs and rabbit are the fastest renewable protein on a small lot."],
+["3","Dwarf fruit trees, berry canes, grape vines","—","Plant them the first spring you own the ground."],
+["3","Cold frame or hoop house","1",""]
+]],
+
+["Radiation", "Straight talk on shielding, because this is where money gets wasted. Protection comes from <b>mass between you and the fallout</b>, and it is measured in half-value layers — the thickness that cuts the dose in half. For fallout gamma that is roughly 0.4 in of lead, 1 in of steel, 2.4 in of concrete, 3.5 in of packed earth, or 4.5 in of water. A sheet of 1/16-in lead is about a sixth of one half-value layer: it stops maybe 10% of the gamma. Eighteen inches of packed dirt stops about 97%. <b>Dirt, water, books and canned goods are the shielding. Lead is a specialty tool</b> — good for lining a small cache, a seed vault, or one narrow gap you cannot fill with mass. Buy a few sheets if you want them, but spend the real money on sandbags and a plan.", [
+["1","Potassium iodide, 130 mg tablets","14 days per person","Saturates the thyroid so it cannot absorb radioiodine. That is <b>all</b> it does — it is not an anti-radiation pill and offers no protection from anything else."],
+["1","Personal dosimeter","1 per person","A card-type RADTriage or an electronic personal dosimeter. Knowing your accumulated dose is what tells you when it is safe to move."],
+["1","Survey meter / Geiger counter with beta-gamma probe","1","Measures rate, not accumulation. Use it to check food, water, surfaces and which room of the house is hottest."],
+["1","Heavy plastic sheeting, 6 mil, and quality duct tape","2 rolls + 4 rolls","Seal the shelter room. Fallout is dust — keep the dust out and you have won most of the fight."],
+["1","P100 respirators and spare cartridges","1 per person + spares","The real danger is inhaled and ingested particles, not the wave of light from movies."],
+["1","Tyvek suits, nitrile gloves, boot covers, eye protection","4 sets per person","Disposable outer layer. You take it off at the door, not inside."],
+["2","Sandbags and a shovel","200 bags","The cheapest protection factor per dollar that exists. Stacked on the floor above your basement corner and against the window wells."],
+["2","Decon station: pump sprayer, tarp, sealable drum, spare clothes, plain soap","1 set","Undress and wash outside the sealed area. Bag the clothing and leave it there."],
+["2","Shelter plan drawn on paper","1","Innermost basement corner, mass overhead and on every side, a route in that does not track dust. Sketch it and post it where the family can see it."],
+["2","Printed decay reference and a wind-up clock","1","The 7:10 rule: every sevenfold increase in time cuts the dose rate tenfold. 1,000 R/hr at one hour is 100 at seven hours and 10 at two days. Two weeks inside covers the overwhelming majority of it."],
+["2","Sealed food and water inside the shelter","14 days","Anything already sealed before fallout arrives is safe to eat. Wash the container, not the food."],
+["3","Lead sheet, 1/16 to 1/8 in","As desired","Line a document and seed cache, or shield one gap. Handle with gloves and wash your hands — it is toxic. Read the note above before buying this by the pallet."],
+["3","Battery-powered air filtration with HEPA, plus a KAP or hand-crank pump","1","Keeping shelter air slightly positive-pressure through a filter is how you breathe for two weeks without pulling dust in."]
+]],
+
+["Power and light", null, [
+["1","Headlamps and spare batteries","2 per person","Hands free beats a flashlight every single time."],
+["1","Rechargeable AA/AAA cells and a smart charger","40 cells","Low-self-discharge cells. Standardize on one battery size across your gear."],
+["1","Battery lanterns and candles","—",""],
+["2","Solar panels, 400W+, with a charge controller","1 array","Portable or roof. Panels are the cheap part now."],
+["2","LiFePO4 battery bank and a pure sine inverter","1 set","LiFePO4 handles cold and deep cycles far better than lead-acid and lasts several thousand cycles."],
+["2","All-in-one solar generator","1","The no-thinking option for the fridge, CPAP, and comms. Slower and pricier per watt-hour, but it just works."],
+["2","Fuel: propane, stabilized gasoline, kerosene","—","Propane stores indefinitely. Gasoline does not — stabilize it and rotate every six months."],
+["2","Generator, plus oil, filters, plugs, and a transfer switch","1","Test it under load quarterly. A generator that has not run since last year is a heavy box."],
+["2","Faraday cage: galvanized can or rated bags","2","Spare radio, charge controller, inverter, a handheld, and a small solar panel go inside, each wrapped in cloth so nothing touches bare metal."],
+["3","Wire, fuses, MC4 connectors, crimpers, multimeter","1 kit",""],
+["3","12V accessories: fans, lights, pumps, USB","—","Skipping the inverter saves 10–15% of everything you generate."]
+]],
+
+["Communications", null, [
+["1","Hand-crank / solar NOAA weather radio with shortwave","2","Crank, solar, AA, and USB inputs. One lives in the shelter, one in the vehicle. This is your first warning and your first news."],
+["1","Printed card of local frequencies, repeaters, and AM stations","2 copies","Tape one inside the radio case. You will not be looking things up online."],
+["2","Shortwave receiver with SSB","1","A Tecsun PL-330 or PL-990 class receiver. When domestic broadcasting goes down, international shortwave keeps going."],
+["2","GMRS radios and a GMRS license","4 radios","One license covers the whole family, no test. Real range on repeaters, unlike bubble-pack FRS."],
+["2","Ham handheld and a Technician license","2 radios","The test is 35 questions and the license is the point — legal practice now means you know how to use it later."],
+["2","Antenna wire, coax, adapters, SWR meter","1 kit","A cheap radio with a good antenna beats an expensive radio with a stock rubber duck."],
+["3","Scanner or SDR dongle","1","Listening is most of the value. Know what the county is doing."],
+["3","Signal mirror, whistles, chem lights, flares","—",""]
+]],
+
+["Medical", null, [
+["1","Trauma kit: CAT tourniquets, chest seals, pressure bandages, hemostatic gauze","2 kits + 4 tourniquets","One in each vehicle, one in the house. Bleeding control is the only injury where minutes matter and help is not coming."],
+["1","Prescription buffer","90 days minimum","Ask the pharmacy about 90-day fills and vacation overrides. Rotate so nothing expires."],
+["1","Standard first aid: gauze, tape, irrigation, antiseptic, burn dressing, splints, eye wash","2 kits",""],
+["2","OTC pharmacy: ibuprofen, acetaminophen, aspirin, antihistamine, loperamide, antacid, decongestant, hydrocortisone, antifungal","—","Buy the big bottles. Most stay effective well past the printed date."],
+["2","Oral rehydration salts","50 packets","Dehydration from a stomach bug kills more people historically than the bug does."],
+["2","Antibiotics with a real plan","—","Talk to your doctor or a telehealth service about a standby supply and, more importantly, about when each one is and is not appropriate. Wrong antibiotic, wrong dose, wrong duration does harm."],
+["2","Dental kit: temporary filling material, clove oil, extraction forceps, mirror","1","Dental pain with no dentist is one of the most common and most miserable failures. Get the cleanings done now."],
+["2","Vitals: thermometer, BP cuff, pulse oximeter, stethoscope","1 set",""],
+["2","Two spare pairs of glasses and a current prescription on paper","per person",""],
+["2","Wound closure: skin adhesive, closure strips, suture kit, staplers","1 kit","Closure strips and adhesive handle most of what you would reach for sutures on."],
+["2","Hygiene-critical: N95s, nitrile gloves, alcohol, iodine","—",""],
+["3","Stop the Bleed and a wilderness first aid course","2 people","The class is worth more than the entire kit."],
+["3","Reference: a field medical manual on paper","1",""]
+]],
+
+["Heat, shelter, cooking", null, [
+["1","Sleeping bags rated 20°F or lower, and wool blankets","per person","A Kentucky ice storm at 20°F with no furnace is the most likely version of all this."],
+["1","Base layers, wool socks, hats, gloves, insulated boots","2 sets per person","Wool or synthetic. Cotton next to skin in the cold is dangerous."],
+["1","Indoor-safe propane heater with a low-oxygen shutoff, plus a CO alarm","1 + 2 alarms","Battery CO alarms are not optional when you start burning things indoors. This is the failure that kills people every winter."],
+["2","Wood stove, insulated pipe, hearth pad","1","Installed and inspected, not stacked in the garage waiting for an emergency."],
+["2","Firewood, seasoned","2+ cords","Seasoned a year. Green wood is smoke and creosote."],
+["2","Chainsaw, bar oil, mix, chains, files, chaps, helmet","1 kit","Plus a two-man crosscut or a good bow saw for when the fuel runs out."],
+["2","Splitting maul, wedges, axe, sharpening stone","1 set",""],
+["2","Propane camp stove and a rocket stove","1 each","Propane for convenience, rocket stove for when propane is gone and sticks are not."],
+["2","Cast iron, Dutch oven, kettle, manual can opener","—","Two can openers. They break."],
+["2","Window film, weatherstripping, foam board","—","Shrink your heated footprint to one room and heat that."],
+["3","Solar oven","1","Free cooking on any clear day, zero fuel, zero smoke signature."],
+["3","Tents, tarps, paracord, ground pads","—",""]
+]],
+
+["Sanitation and hygiene", null, [
+["1","Bucket toilet, snap-on seat, heavy liners","2 buckets","The second most likely thing to actually go wrong is the toilet, not the grid."],
+["1","Cover material: sawdust, coir, or peat","10 cu ft","Coir doubles here — it composts well and kills the smell. One more reason to stock extra bricks."],
+["1","Toilet paper, plus a bidet bottle","6 months","The bidet bottle turns a six-month supply into a two-year one."],
+["2","Soap, shampoo, toothbrushes, toothpaste, floss","1 year","Dental hygiene is medical care."],
+["2","Bleach, hydrogen peroxide, dish soap, contractor trash bags","—",""],
+["2","Feminine supplies and diapers as your household needs","6–12 months",""],
+["2","Washboard, tub, wringer, clothesline","1 set",""],
+["2","Lime, and a shovel dedicated to the latrine","—","Marked and kept separate. Never the garden shovel."],
+["3","Composting toilet or a properly sited latrine, downhill from any water","1","Sited 200+ feet from any well or spring."],
+["3","Lice, flea, and rodent control","—","Rodents in a food store is how a year of work disappears in a month."]
+]],
+
+["Tools, repair, and property", null, [
+["1","Complete hand tool set, no cords","1 set","Brace and bit, hand saws, planes, files, chisels. Every job you do with a battery today has a 1930s version."],
+["2","Fasteners, wire, rope, ratchet straps, paracord","—",""],
+["2","Duct tape, Gorilla tape, epoxy, JB Weld, silicone, PVC cement","—",""],
+["2","Tarps, plywood, 2x4s, plastic sheeting, roofing nails","—","Emergency roof and window repair. After a derecho nobody has plywood for two weeks."],
+["2","Sharpening: stones, files, honing guide","1 set","Dull tools are the reason people quit and the reason people get hurt."],
+["2","Spare vehicle parts, fluids, tires, and a repair manual on paper","—",""],
+["2","Bicycle, tubes, patch kit, trailer","1 per person","Silent, fuel-free, carries a load."],
+["2","Fire extinguishers, ABC","1 per floor + kitchen","You are about to add a lot of open flame to your life."],
+["3","Come-along, chain, jack, tow strap, wheelbarrow, hand truck","—",""],
+["3","Locks, exterior lighting, fencing, a gun safe, a dog","—","Layered, boring deterrence beats anything dramatic."],
+["3","Firearms and ammunition per your training and local law","—","Practice more than you stockpile. Skill and safe storage are the actual asset."]
+]],
+
+["Documents, cash, and records", null, [
+["1","Small bills and coins","As you can","Cash-only for as long as cards are down. Nobody can make change for a hundred."],
+["1","Grab-and-go document folder, waterproof","1","Deeds, titles, insurance, birth certificates, IDs, marriage license, medical records, immunizations, prescriptions, photos of everyone including the dogs."],
+["2","Encrypted USB backup plus a paper copy of what matters most","2","Digital fails when the grid does. Paper is the primary, the drive is the convenience."],
+["2","Paper maps: county, state, topo, plus a compass","1 set","Mark water, bridges, hospitals, and the routes to family."],
+["2","Written contact list and a family rally plan","2 copies","One meeting point close, one far. Out-of-state relay contact. Everyone memorizes it."],
+["2","Property records: well depth, septic location, shutoffs, panel map","1","Sketch where every shutoff is and tape it to the panel."]
+]],
+
+["Knowledge shelf", "Paper only. A library on a dead tablet is a paperweight.", [
+["2","Nuclear War Survival Skills — Cregg Kearny","1","Free as a PDF, worth printing and binding. The expedient shelter designs and the homemade Kearny fallout meter are the parts nothing else covers."],
+["2","Where There Is No Doctor and Where There Is No Dentist","1 each","Written for places with no medical system. That is the scenario."],
+["2","The Encyclopedia of Country Living — Carla Emery","1","The single best one-volume book on doing all of this by hand."],
+["2","Ball Blue Book of canning","1","Follow tested times exactly. Botulism does not negotiate."],
+["2","Seed to Seed — Suzanne Ashworth","1","How to actually save seed species by species. The difference between one harvest and every harvest."],
+["2","Storey's guides for whatever animals you keep","—",""],
+["3","Regional edible and medicinal plant field guide for Kentucky","1","Never eat on a guess."],
+["3","Small-engine, plumbing, electrical, and carpentry repair manuals","—",""]
+]],
+
+["Barter and trade goods", "Stock these last and only after your own house is covered. What people actually pay for is a skill — welding, fixing, sewing, midwifery, small engines, pulling a tooth.", [
+["3","Lighters, strike-anywhere matches, ferro rods","bulk","Tiny, cheap, universally wanted."],
+["3","Salt, sugar, coffee, spices","bulk",""],
+["3","Batteries, candles, soap","bulk",""],
+["3","Needles, thread, safety pins, zippers, patch material","bulk",""],
+["3","Spare water filters and seed packets","—","High value, low weight, and they help your neighbors keep their feet, which helps you."],
+["3","Hand tools, files, and fasteners","—",""]
+]]
+];
+
+const TL = {"1":["t1","72H"],"2":["t2","90D"],"3":["t3","LONG"]};
+let checked = new Set();
+let filter = "all";
+let query = "";
+let memoryOnly = false;
+
+const body = document.getElementById("body");
+
+/* build DOM once */
+D.forEach((sec, si) => {
+  const [title, note, items] = sec;
+  const el = document.createElement("section");
+  el.innerHTML = `<div class="sec-head"><h2>${title}</h2><div class="sec-tally" data-tally="${si}"></div></div>` +
+    (note ? `<div class="note${si===4?" hot":""}">${note}</div>` : "");
+  const ul = document.createElement("ul");
+  items.forEach((it, ii) => {
+    const [tier, name, qty, sub] = it;
+    const id = si + "." + ii;
+    const li = document.createElement("li");
+    li.dataset.id = id; li.dataset.tier = tier;
+    li.dataset.text = (name + " " + (sub||"") + " " + title).toLowerCase();
+    li.innerHTML =
+      `<input type="checkbox" id="c${id}" aria-label="${name.replace(/"/g,"&quot;")}">` +
+      `<label class="name" for="c${id}"><span class="pill ${TL[tier][0]}">${TL[tier][1]}</span>${name}</label>` +
+      `<div class="qty">${qty||""}</div>` +
+      (sub ? `<div class="sub">${sub}</div>` : "");
+    ul.appendChild(li);
+  });
+  el.appendChild(ul);
+  body.appendChild(el);
+});
+
+const ticks = document.getElementById("ticks");
+for (let i=0;i<40;i++){ const d=document.createElement("div"); d.className="tick"; ticks.appendChild(d); }
+
+const all = [...document.querySelectorAll("li")];
+document.getElementById("tot").textContent = all.length;
+
+function paint(){
+  all.forEach(li=>{
+    const on = checked.has(li.dataset.id);
+    li.classList.toggle("done", on);
+    li.querySelector("input").checked = on;
+    const okTier = filter==="all" || filter==="open" || li.dataset.tier===filter;
+    const okOpen = filter!=="open" || !on;
+    const okQ = !query || li.dataset.text.includes(query);
+    li.style.display = (okTier && okOpen && okQ) ? "" : "none";
+  });
+  D.forEach((sec,si)=>{
+    const rows = all.filter(li=>li.dataset.id.startsWith(si+"."));
+    const done = rows.filter(li=>checked.has(li.dataset.id)).length;
+    document.querySelector(`[data-tally="${si}"]`).textContent = `${done}/${rows.length}`;
+    rows[0].closest("section").style.display = rows.some(li=>li.style.display!=="none") ? "" : "none";
+  });
+  const n = checked.size, p = Math.round(n/all.length*100);
+  document.getElementById("cnt").textContent = n;
+  document.getElementById("pct").textContent = p + "%";
+  [...ticks.children].forEach((t,i)=>t.classList.toggle("on", i < n/all.length*40));
+}
+
+async function save(){
+  if (memoryOnly) return;
+  try { await window.storage.set("manifest:v1", JSON.stringify([...checked])); }
+  catch(e){ memoryOnly = true; }
+}
+
+async function load(){
+  try {
+    const r = await window.storage.get("manifest:v1");
+    if (r && r.value) checked = new Set(JSON.parse(r.value));
+  } catch(e){ /* nothing saved yet, or storage unavailable */ }
+  paint();
+}
+
+body.addEventListener("change", e=>{
+  if (e.target.type !== "checkbox") return;
+  const id = e.target.closest("li").dataset.id;
+  e.target.checked ? checked.add(id) : checked.delete(id);
+  paint(); save();
+});
+
+const btns = {all:"f-all","1":"f-1","2":"f-2","3":"f-3",open:"f-open"};
+Object.entries(btns).forEach(([k,id])=>{
+  document.getElementById(id).addEventListener("click",()=>{
+    filter = k;
+    Object.values(btns).forEach(b=>document.getElementById(b).setAttribute("aria-pressed", b===id));
+    paint();
+  });
+});
+
+document.getElementById("q").addEventListener("input", e=>{ query = e.target.value.trim().toLowerCase(); paint(); });
+document.getElementById("print").addEventListener("click", ()=>window.print());
+document.getElementById("reset").addEventListener("click", ()=>{
+  if(!confirm("Clear every check on this manifest?")) return;
+  checked.clear(); paint(); save();
+});
+
+document.getElementById("stamp").textContent = "Sheet opened — " + new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+
+load();
+</script>
+</body>
+</html>
